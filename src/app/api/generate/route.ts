@@ -11,6 +11,11 @@ export async function POST(req: Request) {
 
     const completion = await groq.chat.completions.create({
       model: "llama-3.3-70b-versatile",
+
+      response_format: {
+        type: "json_object",
+      },
+
       messages: [
         {
           role: "system",
@@ -27,12 +32,28 @@ Your task:
 4. Keep the output language the same as the user's language.
 5. Improve clarity, context, constraints, and output structure.
 
-Return output ONLY in this JSON format:
+IMPORTANT:
+- Return ONLY valid JSON.
+- Do not use markdown.
+- Do not use \`\`\`json blocks.
+- Do not add explanations before or after JSON.
+
+Return output ONLY in this format:
 
 {
   "standard": "...",
   "advanced": "...",
-  "expert": "..."
+  "expert": "...",
+  "score": 0,
+  "scoreBreakdown": [
+    {
+      "label": "Clarity",
+      "value": 0,
+      "max": 20
+    }
+  ],
+  "followUps": [],
+  "missing": []
 }
 `,
         },
@@ -41,11 +62,15 @@ Return output ONLY in this JSON format:
           content: prompt,
         },
       ],
+
       temperature: 0.7,
+      max_tokens: 4000,
     });
 
     const text =
       completion.choices?.[0]?.message?.content || "";
+
+    console.log("GROQ RESPONSE:", text);
 
     return NextResponse.json({
       choices: [
