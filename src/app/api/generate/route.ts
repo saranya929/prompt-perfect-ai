@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const { prompt } = await req.json();
 
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: `
 You are PromptPerfect AI, an expert prompt engineering assistant.
 
