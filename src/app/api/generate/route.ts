@@ -1,17 +1,20 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import { NextResponse } from "next/server";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: `
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content: `
 You are PromptPerfect AI, an expert prompt engineering assistant.
 
 Your task:
@@ -22,12 +25,7 @@ Your task:
    - Advanced Prompt
    - Expert Prompt
 4. Keep the output language the same as the user's language.
-5. If the input is Telugu, reply in Telugu.
-6. If the input is Hindi, reply in Hindi.
-7. If the input is Tamil, reply in Tamil.
-8. If the input is Kannada, reply in Kannada.
-9. If the input is English, reply in English.
-10. Improve clarity, context, constraints, and output structure.
+5. Improve clarity, context, constraints, and output structure.
 
 Return output ONLY in this JSON format:
 
@@ -36,13 +34,18 @@ Return output ONLY in this JSON format:
   "advanced": "...",
   "expert": "..."
 }
-
-User Input:
-${prompt}
 `,
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
     });
 
-    const text = result.text || "";
+    const text =
+      completion.choices?.[0]?.message?.content || "";
 
     return NextResponse.json({
       choices: [
@@ -54,7 +57,7 @@ ${prompt}
       ],
     });
   } catch (error) {
-    console.error("GEMINI ERROR:", error);
+    console.error("GROQ ERROR:", error);
 
     return NextResponse.json(
       {
