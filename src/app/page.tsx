@@ -147,30 +147,38 @@ console.log("TEXT:", text);
 if (!text) {
   throw new Error("No AI response received");
 }
-  try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    const jsonStart = clean.indexOf('{');
-    const jsonEnd = clean.lastIndexOf('}') + 1;
-    return JSON.parse(clean.slice(jsonStart, jsonEnd));
-  } catch (err) {
+try {
+  const clean = text.replace(/```json|```/g, '').trim();
+  const jsonStart = clean.indexOf('{');
+  const jsonEnd = clean.lastIndexOf('}') + 1;
+
+  if (jsonStart === -1 || jsonEnd === 0) {
+    throw new Error("No JSON found");
+  }
+
+  const jsonText = clean.slice(jsonStart, jsonEnd);
+
+  return JSON.parse(jsonText);
+
+} catch (err) {
   console.error("PARSE ERROR:", err);
+  console.log("RAW RESPONSE:", text);
 
   return {
-    standard: "Error generating prompt",
-    advanced: "Error generating prompt",
-    expert: "Error generating prompt",
-    score: 0,
+    standard: text || "No response received",
+    advanced: text || "No response received",
+    expert: text || "No response received",
+    score: 50,
     scoreBreakdown: [
-      { label: "Clarity", value: 0, max: 20 },
-      { label: "Context", value: 0, max: 20 },
-      { label: "Specificity", value: 0, max: 20 },
-      { label: "Output Format", value: 0, max: 20 },
-      { label: "Constraints", value: 0, max: 20 },
+      { label: "Clarity", value: 10, max: 20 },
+      { label: "Context", value: 10, max: 20 },
+      { label: "Specificity", value: 10, max: 20 },
+      { label: "Output Format", value: 10, max: 20 },
+      { label: "Constraints", value: 10, max: 20 },
     ],
     followUps: [],
     missing: [],
   };
-}
 }
 
 
